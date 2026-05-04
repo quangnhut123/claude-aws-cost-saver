@@ -18,7 +18,7 @@ Claude: Found 8 issues. Potential savings: $340/month
 In Claude Code:
 
 ```
-/plugin → Marketplaces → Add Marketplace → git@github.com:prajapatimehul/aws-cost-saver.git
+/plugin → Marketplaces → Add Marketplace → git@github.com:prajapatimehul/claude-aws-cost-saver.git
 ```
 
 Select `aws-cost-saver` and install.
