@@ -15,13 +15,28 @@ Claude: Found 8 issues. Potential savings: $340/month
 
 ## Installation
 
-In Claude Code:
+The plugin ships with both a `.claude-plugin/plugin.json` (Claude Code) and a `.codex-plugin/plugin.json` (Codex) manifest, so the same source tree installs cleanly into either agent.
+
+### Claude Code
 
 ```
-/plugin → Marketplaces → Add Marketplace → git@github.com:prajapatimehul/claude-aws-cost-saver.git
+/plugin marketplace add prajapatimehul/claude-aws-cost-saver
+/plugin install aws-cost-saver@aws-cost-saver-marketplace
 ```
 
-Select `aws-cost-saver` and install.
+Or interactively: `/plugin` → Marketplaces → Add Marketplace → `prajapatimehul/claude-aws-cost-saver`.
+
+### Codex
+
+```
+codex plugin marketplace add prajapatimehul/claude-aws-cost-saver
+```
+
+Then launch Codex and run `/plugins` to browse and install **aws-cost-saver**.
+
+### Other agents (MCP only)
+
+Any agent that supports MCP can wire the AWS API server directly using [`plugins/aws-cost-saver/.mcp.json`](plugins/aws-cost-saver/.mcp.json) as a template. Skills live under [`plugins/aws-cost-saver/skills/`](plugins/aws-cost-saver/skills/) and can be loaded as plain Markdown.
 
 ## Quick Start
 
@@ -33,7 +48,7 @@ Or just ask: `Scan my AWS account for cost savings`
 
 **Requirements:** AWS credentials configured (`aws configure` or SSO), `uv` installed.
 
-**This tool only reads data — it never modifies or deletes anything.**
+**This tool only reads data — it never modifies or deletes anything.** A PreToolUse hook blocks any MCP call containing write verbs (`delete`, `terminate`, `stop`, `create-`, `modify`, …).
 
 ## Features
 
@@ -43,13 +58,40 @@ Or just ask: `Scan my AWS account for cost savings`
 - **Real pricing** - uses AWS Cost Explorer
 - **Markdown reports** - clean, actionable output
 
-## Commands
+## What's included
+
+### Commands (slash)
 
 | Command | Description |
 |---------|-------------|
-| `/aws-cost-saver:scan` | Full cost optimization scan |
-| `/aws-cost-saver:reviewing-findings` | Review with confidence scoring |
-| `/aws-cost-saver:validating-aws-pricing` | Validate against AWS Pricing API |
+| `/aws-cost-saver:scan` | Full cost optimization scan across 11 domains |
+
+### Skills (auto-loaded)
+
+| Skill | Description |
+|-------|-------------|
+| `reviewing-findings` | Confidence-scored review; filters false positives |
+| `validating-aws-pricing` | Mandatory Pricing-API/verified-table sanity check before reporting |
+
+### Subagent
+
+`aws-cost-saver:aws-cost-saver` — domain-scoped scanner. Invoke 11 in parallel (one per domain) for a full account audit.
+
+### MCP server
+
+The plugin pre-wires the **AWS API MCP server** (`mcp__awslabs-aws-api__call_aws`) in [`.mcp.json`](plugins/aws-cost-saver/.mcp.json), launched via `uvx` from `scripts/start-mcp.sh`. A PreToolUse hook in [`hooks.json`](plugins/aws-cost-saver/hooks.json) blocks any write/mutation command, keeping every scan read-only.
+
+### CLI
+
+The repository also ships a standalone Python CLI (`main.py`) usable without a coding agent:
+
+```bash
+python main.py checks                       # list all 173 checks
+python main.py check EC2-001                # detail for one check
+python main.py scan-info                    # show the AWS CLI commands a scan runs
+python main.py spend-hotspots --profile X   # rank scan order by real spend (Cost Explorer)
+python main.py report --findings findings.json
+```
 
 ---
 
